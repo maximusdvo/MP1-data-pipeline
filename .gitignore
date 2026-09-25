@@ -1,0 +1,36 @@
+```gitignore
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyc
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+```
+```gitignore
+# OS files
+.DS_Store
+desktop.ini
+Thumbs.db
+
+# Data files
+*.csv
+*.txt
+data/
+
+# Python caches & virtual envs
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# IDE settings & Secrets
+.vscode/
+.idea/
+.env
+```
