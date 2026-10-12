@@ -1,10 +1,11 @@
-""" data pipeline"""
+"""Data pipeline."""
 
 import argparse
 import logging
 import sys
 from pathlib import Path
 from data_loaders import load_data
+from data_processor import process_data, create_cleaning_report
 
 logger = logging.getLogger(__name__)
 
@@ -16,33 +17,28 @@ def setup_logging(verbose=False):
     else:
         level = logging.INFO
     logging.basicConfig(
-        level = level,
-        format = "%(asctime)s %(levelname)-8s %(message)s",
-        datefmt = "%H:%M:%S"
-     #for the format, we could add -8s if we want visually to match/ We could also optionally addthe year and date
+        level=level,
+        format="%(asctime)s %(levelname)-8s %(name)s — %(message)s",
+        datefmt="%H:%M:%S"
     )
 
 
 def parse_arguments():
     """Parse command-line arguments."""
-    parser = argparse.ArgumentParser(description = "Data Processing Pipeline")
+    parser = argparse.ArgumentParser(description="Data Processing Pipeline")
 
     parser.add_argument("--input", "-i",
-                        required = True,
-                        help = "Path to the input file")
+                        required=True,
+                        help="Path to the input file")
+    parser.add_argument("--config",
+                        required=True,
+                        help="Path to YAML config file")
     parser.add_argument("--output", "-o",
-                        required = True,
-                        help = "Path to the output file")
-
-    parser.add_argument("--format",
-                        choices= ["csv", "json"],
-                        default = "csv",
-                        help = "Output format: csv or json (default:csv)" )
-
+                        required=True,
+                        help="Path to the output file")
     parser.add_argument("--verbose", "-v",
-                        action = "store_true",
-                        help = "Enable Verbose logging")
-    #Verbose is the flag that automatically controls how much detail is logged when the script is ran
+                        action="store_true",
+                        help="Enable verbose logging")
 
     return parser.parse_args()
 
@@ -50,10 +46,10 @@ def parse_arguments():
 def validate_input(filepath):
     """Check whether the input path exists and is a file."""
     if Path(filepath).is_file():
-        logger.info(f"Input file validates: {filepath}")
+        logger.info(f"Input file validated: {filepath}")
         return True
     else:
-        logger.error(f"Input File not found: {filepath}")
+        logger.error(f"Input file not found: {filepath}")
         return False
 
 
@@ -63,17 +59,38 @@ def main():
 
     setup_logging(args.verbose)
 
-    logger.debug(f"Arguments parsed: input={args.input}, output={args.output}, format={args.format}")
+    logger.debug(
+        f"Arguments parsed: input={args.input}, "
+        f"output={args.output}, config={args.config}"
+    )
 
-    is_valid = validate_input(args.input)
-
-    if not is_valid:
+    # Validate both files before calling any loaders
+    if not validate_input(args.input):
         sys.exit(1)
+    if not validate_input(args.config):
+        sys.exit(1)
+
+    # Load input data and config in the same try block
     try:
-        data = load_data(args.input)
+        df = load_data(args.input)
+        config = load_data(args.config)
     except ValueError:
         sys.exit(1)
-    logger.info("Pipeline setup complete. Ready to process.")
+
+    # Process the data
+    df_original = df.copy()
+    try:
+        df_clean = process_data(df, config)
+    except ValueError:
+        sys.exit(1)
+
+    # Report + output
+    report = create_cleaning_report(df_original, df_clean)
+    print(report)
+    logger.info(f"Processing complete: {len(df_original)} → {len(df_clean)} rows")
+
+    df_clean.to_csv(args.output, index=False)
+    logger.info(f"Saved cleaned data to {args.output}")
 
 
 if __name__ == "__main__":
