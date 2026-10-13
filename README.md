@@ -12,3 +12,26 @@
 #All settings live in config/config.yaml, so a new dataset only needs config changes, not code changes.
 
 
+## example
+
+```bash
+python pipeline.py --input fixtures/sample_data.csv --output output/clean.csv --config config/config.yaml --verbose
+```
+
+Output:
+23:15:01 DEBUG    __main__ — Arguments parsed: input=fixtures/sample_data.csv, output=output/clean.csv, config=config/config.yaml
+23:15:01 INFO     src.utils — Input file validated: fixtures/sample_data.csv
+23:15:01 INFO     src.utils — Input file validated: config/config.yaml
+23:15:01 INFO     src.data_loaders — Loaded CSV file: fixtures\sample_data.csv (100 rows)
+23:15:01 INFO     src.data_loaders — Loaded YAML file: config\config.yaml
+23:15:01 WARNING  src.data_validator — Removed 2 rows with invalid numeric values in rating
+23:15:01 DEBUG    src.data_validator — Validation: 100 -> 98 rows (2 removed)
+23:15:01 INFO     __main__ — Validation complete: 100 -> 98 rows
+23:15:01 DEBUG    src.data_processor — remove_duplicates: 98 → 96 rows
+23:15:01 DEBUG    src.data_processor — handle_missing: 96 → 94 rows
+23:15:01 WARNING  src.data_processor — Column not found: Score
+23:15:01 INFO     __main__ — Processing complete: 98 → 94 rows
+23:15:01 DEBUG    src.data_output — Saved 94 rows to output\clean.csv
+23:15:01 INFO     __main__ — Saved cleaned data to output/clean.csv
+cleaned report
+
